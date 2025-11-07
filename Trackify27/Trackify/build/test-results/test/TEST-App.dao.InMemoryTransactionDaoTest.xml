@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="App.dao.InMemoryTransactionDaoTest" tests="9" skipped="0" failures="0" errors="0" timestamp="2025-11-07T14:41:12.734Z" hostname="DJ" time="0.14">
+  <properties/>
+  <testcase name="testProfitCalculation()" classname="App.dao.InMemoryTransactionDaoTest" time="0.071"/>
+  <testcase name="testFindAll()" classname="App.dao.InMemoryTransactionDaoTest" time="0.003"/>
+  <testcase name="testSaveNullThrowsException()" classname="App.dao.InMemoryTransactionDaoTest" time="0.003"/>
+  <testcase name="testTransactionsSortedByDateDescending()" classname="App.dao.InMemoryTransactionDaoTest" time="0.001"/>
+  <testcase name="testDeleteAll()" classname="App.dao.InMemoryTransactionDaoTest" time="0.002"/>
+  <testcase name="testDeleteById()" classname="App.dao.InMemoryTransactionDaoTest" time="0.002"/>
+  <testcase name="testExportCsv(Path)" classname="App.dao.InMemoryTransactionDaoTest" time="0.033"/>
+  <testcase name="testUpdateExistingTransaction()" classname="App.dao.InMemoryTransactionDaoTest" time="0.004"/>
+  <testcase name="testSaveAndFindById()" classname="App.dao.InMemoryTransactionDaoTest" time="0.002"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>
