@@ -1,50 +1,123 @@
-package oop.barcelo.trackify27.models;
+package App.models;
 
-import javafx.beans.property.*;
+import java.time.LocalDate;
+import java.util.Objects;
 
+/**
+ * Transaction model used by the UI and DAOs.
+ * Each transaction belongs to a specific user (userId).
+ */
 public class Transaction {
-    private final StringProperty id;
-    private final StringProperty date;
-    private final StringProperty customer;
-    private final StringProperty item;
-    private final StringProperty payment;
-    private final DoubleProperty revenue;
-    private final DoubleProperty cost;
-    private final DoubleProperty profit;
-    private final StringProperty notes;
+    private String id;
+    private String userId;          // <-- NEW: link to User._id in MongoDB
+    private LocalDate date;
+    private String customer;
+    private String item;
+    private String paymentMethod;
+    private double revenue;
+    private double cost;
+    private double profit;
+    private String notes;
 
-    public Transaction(String id, String date, String customer, String item, String payment,
-                       double revenue, double cost, double profit, String notes) {
-        this.id = new SimpleStringProperty(id);
-        this.date = new SimpleStringProperty(date);
-        this.customer = new SimpleStringProperty(customer);
-        this.item = new SimpleStringProperty(item);
-        this.payment = new SimpleStringProperty(payment);
-        this.revenue = new SimpleDoubleProperty(revenue);
-        this.cost = new SimpleDoubleProperty(cost);
-        this.profit = new SimpleDoubleProperty(profit);
-        this.notes = new SimpleStringProperty(notes);
+    public Transaction() { }
+
+    // Constructor used by UI (no id, profit auto-calculated)
+    public Transaction(LocalDate date, String customer, String item,
+                       String paymentMethod, double revenue, double cost, String notes) {
+        this.id = null;
+        this.date = date;
+        this.customer = customer;
+        this.item = item;
+        this.paymentMethod = paymentMethod;
+        this.revenue = revenue;
+        this.cost = cost;
+        this.profit = revenue - cost;
+        this.notes = notes;
     }
 
-    // Getters for properties (for TableView)
-    public StringProperty idProperty() { return id; }
-    public StringProperty dateProperty() { return date; }
-    public StringProperty customerProperty() { return customer; }
-    public StringProperty itemProperty() { return item; }
-    public StringProperty paymentProperty() { return payment; }
-    public DoubleProperty revenueProperty() { return revenue; }
-    public DoubleProperty costProperty() { return cost; }
-    public DoubleProperty profitProperty() { return profit; }
-    public StringProperty notesProperty() { return notes; }
+    // Full constructor (if you need to set id)
+    public Transaction(String id, String userId, LocalDate date, String customer,
+                       String item, String paymentMethod, double revenue,
+                       double cost, String notes) {
+        this.id = id;
+        this.userId = userId;
+        this.date = date;
+        this.customer = customer;
+        this.item = item;
+        this.paymentMethod = paymentMethod;
+        this.revenue = revenue;
+        this.cost = cost;
+        this.profit = revenue - cost;
+        this.notes = notes;
+    }
 
-    // convenience getters
-    public String getId() { return id.get(); }
-    public String getDate() { return date.get(); }
-    public String getCustomer() { return customer.get(); }
-    public String getItem() { return item.get(); }
-    public String getPayment() { return payment.get(); }
-    public double getRevenue() { return revenue.get(); }
-    public double getCost() { return cost.get(); }
-    public double getProfit() { return profit.get(); }
-    public String getNotes() { return notes.get(); }
+    // --- getters & setters ---
+    public String getId() { return id; }
+    public void setId(String id) { this.id = id; }
+
+    public String getUserId() { return userId; }
+    public void setUserId(String userId) { this.userId = userId; }
+
+    public LocalDate getDate() { return date; }
+    public void setDate(LocalDate date) { this.date = date; }
+
+    public String getCustomer() { return customer; }
+    public void setCustomer(String customer) { this.customer = customer; }
+
+    public String getItem() { return item; }
+    public void setItem(String item) { this.item = item; }
+
+    public String getPaymentMethod() { return paymentMethod; }
+    public void setPaymentMethod(String paymentMethod) { this.paymentMethod = paymentMethod; }
+
+    public double getRevenue() { return revenue; }
+    public void setRevenue(double revenue) {
+        this.revenue = revenue;
+        recalcProfit();
+    }
+
+    public double getCost() { return cost; }
+    public void setCost(double cost) {
+        this.cost = cost;
+        recalcProfit();
+    }
+
+    public double getProfit() { return profit; }
+    // no setProfit: profit derived from revenue - cost
+
+    public String getNotes() { return notes; }
+    public void setNotes(String notes) { this.notes = notes; }
+
+    private void recalcProfit() {
+        this.profit = this.revenue - this.cost;
+    }
+
+    @Override
+    public String toString() {
+        return "Transaction{" +
+                "id='" + id + '\'' +
+                ", userId='" + userId + '\'' +
+                ", date=" + date +
+                ", customer='" + customer + '\'' +
+                ", item='" + item + '\'' +
+                ", paymentMethod='" + paymentMethod + '\'' +
+                ", revenue=" + revenue +
+                ", cost=" + cost +
+                ", profit=" + profit +
+                ", notes='" + notes + '\'' +
+                '}';
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        Transaction that = (Transaction) o;
+        return Objects.equals(id, that.id);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(id);
+    }
 }
