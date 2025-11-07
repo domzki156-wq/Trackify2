@@ -14,7 +14,7 @@ public class MongoDBConnection {
     private static final String DEFAULT_DB = "trackify";
 
     public static synchronized void init(String uri, String dbName) {
-        if (mongoClient != null) return; // already initialized
+        if (mongoClient != null) return; 
         if (uri == null || uri.isBlank()) uri = DEFAULT_URI;
         if (dbName == null || dbName.isBlank()) dbName = DEFAULT_DB;
         currentUri = uri;
@@ -47,3 +47,4 @@ public class MongoDBConnection {
         }
     }
 }
+
