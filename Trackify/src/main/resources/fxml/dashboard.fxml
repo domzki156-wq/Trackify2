@@ -1,0 +1,118 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<VBox xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1"
+      fx:controller="App.controllers.DashboardController"
+      spacing="20" styleClass="root-container">
+
+    <padding>
+        <Insets top="20" right="20" bottom="20" left="20"/>
+    </padding>
+
+    <!-- Top KPI Cards Section -->
+    <HBox spacing="15" alignment="CENTER_LEFT">
+        <!-- Revenue Card -->
+        <VBox styleClass="kpi-card" spacing="5">
+            <Label text="Revenue" styleClass="kpi-label"/>
+            <Label fx:id="revenueLabel" text="0.00" styleClass="kpi-value"/>
+            <Region styleClass="indicator-green"/>
+            <HBox.hgrow>ALWAYS</HBox.hgrow>
+        </VBox>
+
+        <!-- Cost Card -->
+        <VBox styleClass="kpi-card" spacing="5">
+            <Label text="Cost" styleClass="kpi-label"/>
+            <Label fx:id="costLabel" text="0.00" styleClass="kpi-value"/>
+            <Region styleClass="indicator-red"/>
+            <HBox.hgrow>ALWAYS</HBox.hgrow>
+        </VBox>
+
+        <!-- Total Profit Card -->
+        <VBox styleClass="kpi-card" spacing="5">
+            <Label text="Total Profit" styleClass="kpi-label"/>
+            <Label fx:id="totalProfitLabel" text="0.00" styleClass="kpi-value"/>
+            <Region styleClass="indicator-blue"/>
+            <HBox.hgrow>ALWAYS</HBox.hgrow>
+        </VBox>
+
+        <!-- Weekly Profit Card -->
+        <VBox styleClass="kpi-card" spacing="5">
+            <Label text="Weekly Profit" styleClass="kpi-label"/>
+            <Label fx:id="weeklyProfitLabel" text="0.00" styleClass="kpi-value"/>
+            <Region styleClass="indicator-purple"/>
+            <HBox.hgrow>ALWAYS</HBox.hgrow>
+        </VBox>
+
+        <!-- Monthly Profit Card -->
+        <VBox styleClass="kpi-card" spacing="5">
+            <Label text="Monthly Profit" styleClass="kpi-label"/>
+            <Label fx:id="monthlyProfitLabel" text="0.00" styleClass="kpi-value"/>
+            <Region styleClass="indicator-teal"/>
+            <HBox.hgrow>ALWAYS</HBox.hgrow>
+        </VBox>
+
+        <!-- USD Wallet Card -->
+        <VBox styleClass="wallet-card-usd" spacing="5" prefWidth="180">
+            <Label text="USD Wallet" styleClass="wallet-label"/>
+            <Label fx:id="usdWalletLabel" text="0.00" styleClass="wallet-value"/>
+        </VBox>
+
+        <!-- PHP Equivalent Card -->
+        <VBox styleClass="wallet-card-php" spacing="5" prefWidth="180">
+            <Label text="PHP Equivalent" styleClass="wallet-label"/>
+            <Label fx:id="phpEquivalentLabel" text="₱0.00" styleClass="wallet-value"/>
+        </VBox>
+    </HBox>
+
+    <!-- Transaction Table -->
+    <TableView fx:id="transactionTable" styleClass="transaction-table">
+        <columns>
+            <TableColumn fx:id="dateColumn" text="Date" prefWidth="100"/>
+            <TableColumn fx:id="customerColumn" text="Customer" prefWidth="120"/>
+            <TableColumn fx:id="itemColumn" text="Item" prefWidth="200"/>
+            <TableColumn fx:id="paymentColumn" text="Payment" prefWidth="120"/>
+            <TableColumn fx:id="revenueColumn" text="Revenue" prefWidth="100"/>
+            <TableColumn fx:id="costColumn" text="Cost" prefWidth="100"/>
+            <TableColumn fx:id="profitColumn" text="Profit" prefWidth="100"/>
+            <TableColumn fx:id="notesColumn" text="Notes" prefWidth="200"/>
+        </columns>
+        <VBox.vgrow>ALWAYS</VBox.vgrow>
+    </TableView>
+
+    <!-- Action Buttons Row -->
+    <HBox spacing="10" alignment="CENTER">
+        <Button fx:id="recordTransactionBtn" text="Record Transaction"
+                styleClass="action-button-green" onAction="#handleRecordTransaction"
+                prefWidth="160" prefHeight="40"/>
+
+        <Button fx:id="deleteSelectedBtn" text="Delete Selected"
+                styleClass="action-button-red" onAction="#handleDeleteSelected"
+                prefWidth="160" prefHeight="40"/>
+
+        <Button fx:id="exportCsvBtn" text="Export CSV"
+                styleClass="action-button-blue" onAction="#handleExportCsv"
+                prefWidth="160" prefHeight="40"/>
+
+        <Button fx:id="buyItemsBtn" text="Buy Items"
+                styleClass="action-button-purple" onAction="#handleBuyItems"
+                prefWidth="160" prefHeight="40"/>
+
+        <Button fx:id="currencyConverterBtn" text="Currency Converter"
+                styleClass="action-button-orange" onAction="#handleCurrencyConverter"
+                prefWidth="160" prefHeight="40"/>
+
+        <Button fx:id="depositBtn" text="Deposit"
+                styleClass="action-button-green" onAction="#handleDeposit"
+                prefWidth="160" prefHeight="40"/>
+    </HBox>
+
+    <!-- Second Row of Buttons -->
+    <HBox spacing="10" alignment="CENTER_LEFT">
+        <Button fx:id="withdrawBtn" text="Withdraw"
+                styleClass="action-button-red-dark" onAction="#handleWithdraw"
+                prefWidth="160" prefHeight="40"/>
+    </HBox>
+</VBox>
