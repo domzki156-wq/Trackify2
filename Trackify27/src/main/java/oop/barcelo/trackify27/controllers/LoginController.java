@@ -1,101 +1,57 @@
-package oop.barcelo.trackify27.controllers;
+package App.controllers;
 
-import com.mongodb.client.FindIterable;
-import com.mongodb.client.MongoCollection;
-import com.mongodb.client.MongoDatabase;
+import App.Session;
+import App.dao.DaoFactory;
+import App.models.User;
+import App.service.AuthService;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
 import javafx.stage.Stage;
-import oop.barcelo.trackify27.HelloApplication;
-import oop.barcelo.trackify27.db.MongoDBConnection;
-import org.bson.Document;
 
-import java.nio.charset.StandardCharsets;
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
-import java.util.HexFormat;
-
-import static com.mongodb.client.model.Filters.or;
-import static com.mongodb.client.model.Filters.eq;
+import java.util.Optional;
 
 public class LoginController {
-
     @FXML private TextField usernameField;
     @FXML private PasswordField passwordField;
     @FXML private Label messageLabel;
 
-    @FXML
-    private void initialize() {
-        messageLabel.setText("");
-    }
+    private final AuthService authService = new AuthService(DaoFactory.getUserDao());
 
     @FXML
-    private void onLoginPressed() {
-        messageLabel.setText("");
-        String userInput = usernameField.getText() == null ? "" : usernameField.getText().trim();
-        String password = passwordField.getText() == null ? "" : passwordField.getText();
-
-        if (userInput.isEmpty() || password.isEmpty()) {
-            messageLabel.setText("Please enter username/email and password.");
-            return;
-        }
+    private void handleLogin() {
+        String username = usernameField.getText().trim();
+        char[] password = passwordField.getText().toCharArray();
 
         try {
-            MongoDatabase db = MongoDBConnection.getDatabase();
-            MongoCollection<Document> usersColl = db.getCollection("users"); // expects "users"
-
-            FindIterable<Document> found = usersColl.find(or(eq("username", userInput), eq("email", userInput)));
-            Document userDoc = found.first();
-
-            System.out.println("DEBUG - userDoc found? " + (userDoc != null));
-            if (userDoc != null) {
-                System.out.println("DEBUG - userDoc: " + userDoc.toJson());
-            }
-
-            if (userDoc == null) {
-                messageLabel.setText("No user found with that username/email.");
-                return;
-            }
-
-            String stored = userDoc.getString("passwordHash");
-            if (stored == null) {
-                messageLabel.setText("User record has no passwordHash. Please re-register or reset password.");
-                return;
-            }
-
-            String hashedInput = hashSHA256(password);
-            if (stored.equalsIgnoreCase(hashedInput)) {
-                // success
-                UserController.setCurrentUser(userDoc);
+            Optional<User> user = authService.login(username, password);
+            if (user.isPresent()) {
+                Session.setCurrentUser(user.get());
                 Stage stage = (Stage) usernameField.getScene().getWindow();
-                HelloApplication.openScene(stage, "/oop/barcelo/trackify27/fxml/dashboard.fxml", "Trackify - Dashboard");
+                stage.close();
             } else {
-                messageLabel.setText("Incorrect password. Try again.");
+                messageLabel.setText("Invalid credentials");
             }
         } catch (Exception ex) {
-            ex.printStackTrace();
-            messageLabel.setText("Unable to login: " + ex.getMessage());
+            messageLabel.setText("Login failed: " + ex.getMessage());
+        } finally {
+            java.util.Arrays.fill(password, '\0');
         }
     }
 
     @FXML
-    private void onOpenRegistration() {
+    private void openRegister() {
         try {
-            Stage stage = (Stage) usernameField.getScene().getWindow();
-            HelloApplication.openScene(stage, "/oop/barcelo/trackify27/fxml/registration.fxml", "Trackify - Register");
+            javafx.fxml.FXMLLoader loader = new javafx.fxml.FXMLLoader(getClass().getResource("/fxml/register.fxml"));
+            javafx.scene.Parent root = loader.load();
+            Stage st = new Stage();
+            st.setTitle("Register");
+            st.initOwner(usernameField.getScene().getWindow());
+            st.initModality(javafx.stage.Modality.APPLICATION_MODAL);
+            st.setScene(new javafx.scene.Scene(root));
+            st.setResizable(false);
+            st.showAndWait();
         } catch (Exception e) {
-            e.printStackTrace();
-            messageLabel.setText("Cannot open registration screen: " + e.getMessage());
-        }
-    }
-
-    private static String hashSHA256(String password) {
-        try {
-            MessageDigest md = MessageDigest.getInstance("SHA-256");
-            byte[] digest = md.digest(password.getBytes(StandardCharsets.UTF_8));
-            return HexFormat.of().formatHex(digest);
-        } catch (NoSuchAlgorithmException e) {
-            throw new RuntimeException(e);
+            messageLabel.setText("Failed to open register: " + e.getMessage());
         }
     }
 }
