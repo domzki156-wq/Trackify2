@@ -18,7 +18,7 @@ public class Product {
         this.cost = new SimpleDoubleProperty(cost);
         this.description = new SimpleStringProperty(description);
     }
-
+    asd
     public String getId() { return id.get(); }
     public String getName() { return name.get(); }
     public String getCategory() { return category.get(); }
@@ -33,3 +33,4 @@ public class Product {
     public DoubleProperty costProperty() { return cost; }
     public StringProperty descriptionProperty() { return description; }
 }
+
