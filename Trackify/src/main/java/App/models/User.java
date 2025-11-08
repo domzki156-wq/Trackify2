@@ -6,8 +6,9 @@ import java.util.Objects;
 public class User {
     private String id;
     private String username;
-    private String passwordHash; // BCrypt hash
+    private String passwordHash;
     private Instant createdAt;
+    private double balance = 0.0;
 
     public User() {}
 
@@ -29,6 +30,9 @@ public class User {
 
     public Instant getCreatedAt() { return createdAt; }
     public void setCreatedAt(Instant createdAt) { this.createdAt = createdAt; }
+
+    public double getBalance() { return balance; }
+    public void setBalance(double balance) { this.balance = balance; }
 
     @Override
     public boolean equals(Object o) {
