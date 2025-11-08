@@ -1,96 +1,34 @@
 package App.controllers;
 
 import javafx.fxml.FXML;
-import javafx.scene.control.*;
-import javafx.stage.Stage;
+import javafx.scene.control.Button;
+import javafx.scene.control.Label;
+import javafx.scene.control.TextField;
 
 /**
- * Controller for the Currency Converter dialog.
- * Converts between USD and PHP using a user-specified exchange rate.
- *
- * @author Trackify Team
- * @version 1.0
+ * Minimal currency converter — keeps UI behavior separate.
+ * If you have a more advanced converter (fetch rates) plug that in.
  */
 public class CurrencyConverterController {
+    @FXML private TextField amountField;
+    @FXML private Label resultLabel;
+    @FXML private Button convertBtn;
 
-    @FXML private TextField exchangeRateField;
-    @FXML private TextField usdAmountField;
-    @FXML private TextField phpAmountField;
-    @FXML private Button usdToPhpButton;
-    @FXML private Button phpToUsdButton;
-    @FXML private Button closeButton;
-
-    private static final double DEFAULT_EXCHANGE_RATE = 59.07;
-
-    /**
-     * Initializes the converter with default exchange rate.
-     */
     @FXML
-    public void initialize() {
-        exchangeRateField.setText(String.valueOf(DEFAULT_EXCHANGE_RATE));
-        usdAmountField.setText("0.00");
-        phpAmountField.setText("0.00");
+    private void initialize() {
+        resultLabel.setText("");
     }
 
-    /**
-     * Converts USD to PHP.
-     */
     @FXML
-    private void handleUsdToPhp() {
+    private void handleConvert() {
+        String s = amountField.getText() == null ? "" : amountField.getText().trim();
         try {
-            double usd = Double.parseDouble(usdAmountField.getText());
-            double rate = Double.parseDouble(exchangeRateField.getText());
-
-            if (rate <= 0) {
-                showError("Invalid Rate", "Exchange rate must be positive.");
-                return;
-            }
-
-            double php = usd * rate;
-            phpAmountField.setText(String.format("%.2f", php));
-        } catch (NumberFormatException e) {
-            showError("Invalid Input", "Please enter valid numbers.");
+            double amt = Double.parseDouble(s);
+            // static conversion for UX (example 1 USD -> 59.0 PHP)
+            double php = amt * 59.0;
+            resultLabel.setText(String.format("₱%.2f", php));
+        } catch (Exception ex) {
+            resultLabel.setText("Invalid");
         }
-    }
-
-    /**
-     * Converts PHP to USD.
-     */
-    @FXML
-    private void handlePhpToUsd() {
-        try {
-            double php = Double.parseDouble(phpAmountField.getText());
-            double rate = Double.parseDouble(exchangeRateField.getText());
-
-            if (rate <= 0) {
-                showError("Invalid Rate", "Exchange rate must be positive.");
-                return;
-            }
-
-            double usd = php / rate;
-            usdAmountField.setText(String.format("%.2f", usd));
-        } catch (NumberFormatException e) {
-            showError("Invalid Input", "Please enter valid numbers.");
-        }
-    }
-
-    /**
-     * Closes the converter dialog.
-     */
-    @FXML
-    private void handleClose() {
-        Stage stage = (Stage) closeButton.getScene().getWindow();
-        stage.close();
-    }
-
-    /**
-     * Shows an error alert.
-     */
-    private void showError(String title, String message) {
-        Alert alert = new Alert(Alert.AlertType.ERROR);
-        alert.setTitle(title);
-        alert.setHeaderText(null);
-        alert.setContentText(message);
-        alert.showAndWait();
     }
 }
