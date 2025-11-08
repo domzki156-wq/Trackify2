@@ -1,7 +1,6 @@
 plugins {
     java
     application
-    // use the stable OpenJFX Gradle plugin version that integrates with Kotlin DSL
     id("org.openjfx.javafxplugin") version "0.0.13"
 }
 
@@ -18,26 +17,26 @@ java {
     }
 }
 
-// JavaFX plugin config
 javafx {
-    // Keep a JavaFX version compatible with your JDK; 20/21/22/23 are fine.
     version = "23.0.1"
     modules = listOf("javafx.controls", "javafx.fxml")
 }
 
 application {
-    mainClass.set("App.MainApp") // fully-qualified main class
+    mainClass.set("App.MainApp")
 }
 
 dependencies {
-    // JUnit for testing
     testImplementation("org.junit.jupiter:junit-jupiter:5.10.1")
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
 
-    // MongoDB Java driver (sync)
+    // JSON
+    implementation("org.json:json:20230227")
+
+    // MongoDB driver
     implementation("org.mongodb:mongodb-driver-sync:4.11.0")
 
-    // (optional) BCrypt if you need it later
+    // favre bcrypt (matches your AuthService import)
     implementation("at.favre.lib:bcrypt:0.9.0")
 }
 
@@ -51,7 +50,7 @@ tasks.jar {
     }
 }
 
-// create exports dir before run
+
 tasks.register("createExportsDir") {
     doLast {
         val exportsDir = file("exports")
