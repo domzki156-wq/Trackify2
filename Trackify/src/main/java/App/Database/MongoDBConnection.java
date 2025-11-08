@@ -1,38 +1,44 @@
 package App.Database;
 
+import com.mongodb.ConnectionString;
+import com.mongodb.MongoClientSettings;
 import com.mongodb.client.MongoClient;
 import com.mongodb.client.MongoClients;
 import com.mongodb.client.MongoDatabase;
 
-public class MongoDBConnection {
+/**
+ * MongoDB connection helper with init/get/close.
+ */
+public final class MongoDBConnection {
     private static MongoClient mongoClient;
     private static MongoDatabase database;
-    private static String currentUri;
-    private static String currentDbName;
 
-    // fallback (dev only) - remove credentials or use env var in production
-    private static final String DEFAULT_URI = "mongodb+srv://Pantojas23:Mandreza23@trackify.v1ee3tp.mongodb.net/";
+    // fallback default (use your real URI or env var)
+    private static final String DEFAULT_URI = "mongodb+srv://Pantojas23:Mandreza23@trackify.v1ee3tp.mongodb.net";
     private static final String DEFAULT_DB = "trackify";
 
+    private MongoDBConnection() {}
+
+    /**
+     * Initialize connection. If uri/dbName are null/blank we fallback to defaults.
+     * Calling init multiple times is safe.
+     */
     public static synchronized void init(String uri, String dbName) {
-        if (mongoClient != null) return; // already initialized
+        if (mongoClient != null) return;
         if (uri == null || uri.isBlank()) uri = DEFAULT_URI;
         if (dbName == null || dbName.isBlank()) dbName = DEFAULT_DB;
-        currentUri = uri;
-        currentDbName = dbName;
-        mongoClient = MongoClients.create(uri);
+        ConnectionString conn = new ConnectionString(uri + "/" + dbName + "?retryWrites=true&w=majority");
+        MongoClientSettings settings = MongoClientSettings.builder()
+                .applyConnectionString(conn)
+                .build();
+        mongoClient = MongoClients.create(settings);
         database = mongoClient.getDatabase(dbName);
-        System.out.println("✅ Connected to MongoDB: " + uri + " (DB: " + dbName + ")");
+        System.out.println("Connected to MongoDB: " + uri + " (DB: " + dbName + ")");
     }
 
     public static synchronized MongoDatabase getDatabase() {
         if (database == null) {
-            // lazy init with env var if not init() called
-            String uri = System.getenv("MONGODB_URI");
-            String dbName = System.getenv("TRACKIFY_DB");
-            if (uri == null || uri.isBlank()) uri = DEFAULT_URI;
-            if (dbName == null || dbName.isBlank()) dbName = DEFAULT_DB;
-            init(uri, dbName);
+            init(null, null);
         }
         return database;
     }
@@ -42,8 +48,6 @@ public class MongoDBConnection {
             mongoClient.close();
             mongoClient = null;
             database = null;
-            currentUri = null;
-            currentDbName = null;
             System.out.println("MongoDB connection closed.");
         }
     }
