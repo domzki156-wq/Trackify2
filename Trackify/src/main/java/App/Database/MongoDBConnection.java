@@ -6,9 +6,7 @@ import com.mongodb.client.MongoClient;
 import com.mongodb.client.MongoClients;
 import com.mongodb.client.MongoDatabase;
 
-/**
- * MongoDB connection helper with init/get/close.
- */
+
 public final class MongoDBConnection {
     private static MongoClient mongoClient;
     private static MongoDatabase database;
@@ -19,10 +17,7 @@ public final class MongoDBConnection {
 
     private MongoDBConnection() {}
 
-    /**
-     * Initialize connection. If uri/dbName are null/blank we fallback to defaults.
-     * Calling init multiple times is safe.
-     */
+
     public static synchronized void init(String uri, String dbName) {
         if (mongoClient != null) return;
         if (uri == null || uri.isBlank()) uri = DEFAULT_URI;
@@ -33,7 +28,7 @@ public final class MongoDBConnection {
                 .build();
         mongoClient = MongoClients.create(settings);
         database = mongoClient.getDatabase(dbName);
-        System.out.println("Connected to MongoDB: " + uri + " (DB: " + dbName + ")");
+        System.out.println("✅ Connected to MongoDB: " + uri + " (DB: " + dbName + ")");
     }
 
     public static synchronized MongoDatabase getDatabase() {
@@ -48,7 +43,7 @@ public final class MongoDBConnection {
             mongoClient.close();
             mongoClient = null;
             database = null;
-            System.out.println("MongoDB connection closed.");
+            System.out.println("🧹 MongoDB connection closed.");
         }
     }
 }

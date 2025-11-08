@@ -13,7 +13,7 @@ public class MongoTest {
         } else {
             System.out.println("Using MONGODB_URI from env");
         }
-        try (MongoClient client = MongoClients.create(uri == null ? "mongodb://localhost:27017" : uri)) {
+        try (MongoClient client = MongoClients.create(uri == null ? "mongodb://localhost:27017"  : uri)) {
             MongoDatabase db = client.getDatabase("trackify");
             var col = db.getCollection("transactions");
             System.out.println("Connected. transactions count: " + col.countDocuments());

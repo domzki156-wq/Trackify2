@@ -15,7 +15,7 @@
       stylesheets="@/styles/app.css"
       styleClass="auth-root">
 
-    <!-- Card -->
+
     <StackPane styleClass="auth-card" maxWidth="520" maxHeight="420">
         <VBox alignment="CENTER" spacing="12" style="-fx-padding:20;">
             <Label text="Create your account" styleClass="auth-title" />

@@ -14,12 +14,8 @@ public class AuthService {
         this.userDao = userDao;
     }
 
-    /**
-     * Register new user. Returns created User on success.
-     * Throws IllegalArgumentException for duplicate username.
-     */
+
     public User register(String username, char[] password) {
-        // basic validation
         if (username == null || username.isBlank()) throw new IllegalArgumentException("Username required");
         if (password == null || password.length == 0) throw new IllegalArgumentException("Password required");
 
@@ -27,15 +23,12 @@ public class AuthService {
         if (existing.isPresent()) throw new IllegalArgumentException("Username already exists");
 
         String hash = BCrypt.withDefaults().hashToString(cost, password);
-        // wipe password char[]? Could clear after use.
         User u = new User(username, hash);
         userDao.save(u);
         return u;
     }
 
-    /**
-     * Verify credentials. Returns User if verified, otherwise empty.
-     */
+
     public Optional<User> login(String username, char[] password) {
         Optional<User> maybe = userDao.findByUsername(username);
         if (maybe.isEmpty()) return Optional.empty();

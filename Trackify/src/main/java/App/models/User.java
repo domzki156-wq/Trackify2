@@ -18,7 +18,7 @@ public class User {
         this.createdAt = Instant.now();
     }
 
-    // getters / setters
+
     public String getId() { return id; }
     public void setId(String id) { this.id = id; }
 

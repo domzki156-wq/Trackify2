@@ -8,9 +8,7 @@ import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
-/**
- * In-memory DAO for testing (keeps the same Transaction shape with userId).
- */
+
 public class InMemoryTransactionDao implements TransactionDao {
     private final Map<String, Transaction> transactions = new ConcurrentHashMap<>();
     private static final DateTimeFormatter CSV_DATE_FMT = DateTimeFormatter.ISO_LOCAL_DATE;

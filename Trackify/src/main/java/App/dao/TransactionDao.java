@@ -6,9 +6,7 @@ import java.nio.file.Path;
 import java.util.List;
 import java.util.Optional;
 
-/**
- * Transaction DAO interface.
- */
+
 public interface TransactionDao {
     Transaction save(Transaction t);
     Optional<Transaction> findById(String id);

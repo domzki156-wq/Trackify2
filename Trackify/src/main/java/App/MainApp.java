@@ -9,14 +9,7 @@ import javafx.scene.Scene;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
 
-/**
- * Main entry point for the Trackify application.
- *
- * - Initializes MongoDB connection.
- * - Shows login screen first (styled with app.css).
- * - Opens dashboard after successful authentication.
- * - Closes MongoDB connection on exit.
- */
+
 public class MainApp extends Application {
 
     @Override
@@ -31,24 +24,20 @@ public class MainApp extends Application {
 
     @Override
     public void start(Stage primaryStage) throws Exception {
-        // Preload stylesheet reference and debug
         java.net.URL cssUrl = getClass().getResource("/styles/app.css");
         System.out.println("DEBUG: cssUrl = " + cssUrl);
         String cssPath = cssUrl == null ? null : cssUrl.toExternalForm();
 
-        // Prepare primary stage (owner for dialogs)
         primaryStage.setTitle("Digital Business Tracker - Trackify");
         primaryStage.setMinWidth(1200);
         primaryStage.setMinHeight(800);
 
         try {
-            // 1) Load login UI
             FXMLLoader loginLoader = new FXMLLoader(getClass().getResource("/fxml/login.fxml"));
             Parent loginRoot = loginLoader.load();
 
             Scene loginScene = new Scene(loginRoot);
 
-            // Attempt to attach stylesheet if found
             if (cssPath != null) {
                 loginScene.getStylesheets().add(cssPath);
                 System.out.println("DEBUG: Added stylesheet to loginScene: " + cssPath);
@@ -56,11 +45,8 @@ public class MainApp extends Application {
                 System.out.println("DEBUG: stylesheet not found, cssPath is null");
             }
 
-            // DEBUG: print scene stylesheets
             System.out.println("DEBUG: loginScene stylesheets: " + loginScene.getStylesheets());
 
-            // Fallback visual test: give the login root an inline background so we can see if styling takes
-            // (comment out after test)
             loginRoot.setStyle("-fx-background-color: linear-gradient(to bottom, #14171C, #1A1D29);");
 
             Stage loginStage = new Stage();
@@ -70,10 +56,9 @@ public class MainApp extends Application {
             loginStage.setTitle("Trackify - Login");
             loginStage.setScene(loginScene);
 
-            // Show and wait for login
+
             loginStage.showAndWait();
 
-            // If not authenticated, exit
             if (!Session.isAuthenticated()) {
                 System.out.println("No user logged in. Exiting.");
                 MongoDBConnection.close();
@@ -81,7 +66,6 @@ public class MainApp extends Application {
                 return;
             }
 
-            // 2) Load dashboard with stylesheet attached
             FXMLLoader dashboardLoader = new FXMLLoader(getClass().getResource("/fxml/dashboard.fxml"));
             Parent root = dashboardLoader.load();
 

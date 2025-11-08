@@ -1,64 +1,34 @@
 <?xml version="1.0" encoding="UTF-8"?>
-
 <?import javafx.geometry.Insets?>
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
 
 <VBox xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1"
       fx:controller="App.controllers.CurrencyConverterController"
-      spacing="15" styleClass="dialog-container" prefWidth="450" prefHeight="350">
+      spacing="12" alignment="CENTER" styleClass="root-container" prefWidth="380">
 
     <padding>
-        <Insets top="20" right="20" bottom="20" left="20"/>
+        <Insets top="18" right="18" bottom="18" left="18"/>
     </padding>
 
-    <Label text="Currency Converter" styleClass="dialog-title"/>
+    <Label text="Currency Converter" styleClass="auth-title"/>
+    <GridPane hgap="8" vgap="8">
+        <columnConstraints>
+            <ColumnConstraints percentWidth="35"/>
+            <ColumnConstraints percentWidth="65"/>
+        </columnConstraints>
 
-    <Separator/>
+        <Label text="USD:" GridPane.rowIndex="0" GridPane.columnIndex="0"/>
+        <TextField fx:id="usdField" promptText="Amount in USD" GridPane.rowIndex="0" GridPane.columnIndex="1"/>
 
-    <!-- Exchange Rate -->
-    <VBox spacing="5">
-        <Label text="Exchange Rate (PHP per USD):" styleClass="field-label"/>
-        <TextField fx:id="exchangeRateField" promptText="59.07" styleClass="input-field"/>
-    </VBox>
+        <Label text="PHP:" GridPane.rowIndex="1" GridPane.columnIndex="0"/>
+        <TextField fx:id="phpField" promptText="Amount in PHP" GridPane.rowIndex="1" GridPane.columnIndex="1" editable="false"/>
 
-    <Separator/>
+        <Label fx:id="statusLabel" GridPane.rowIndex="2" GridPane.columnIndex="0" GridPane.columnSpan="2" />
+    </GridPane>
 
-    <!-- USD Input -->
-    <VBox spacing="5">
-        <Label text="USD Amount:" styleClass="field-label"/>
-        <HBox spacing="10" alignment="CENTER_LEFT">
-            <TextField fx:id="usdAmountField" promptText="0.00"
-                       styleClass="input-field">
-                <HBox.hgrow>ALWAYS</HBox.hgrow>
-            </TextField>
-            <Button text="Convert to PHP " onAction="#handleUsdToPhp"
-                    styleClass="convert-button" prefWidth="150"/>
-        </HBox>
-    </VBox>
-
-    <!-- PHP Input -->
-    <VBox spacing="5">
-        <Label text="PHP Amount:" styleClass="field-label"/>
-        <HBox spacing="10" alignment="CENTER_LEFT">
-            <TextField fx:id="phpAmountField" promptText="0.00"
-                       styleClass="input-field">
-                <HBox.hgrow>ALWAYS</HBox.hgrow>
-            </TextField>
-            <Button text="Convert to USD " onAction="#handlePhpToUsd"
-                    styleClass="convert-button" prefWidth="150"/>
-        </HBox>
-    </VBox>
-
-    <Region>
-        <VBox.vgrow>ALWAYS</VBox.vgrow>
-    </Region>
-
-    <Separator/>
-
-    <!-- Close Button -->
-    <HBox spacing="10" alignment="CENTER_RIGHT">
-        <Button fx:id="closeButton" text="Close" onAction="#handleClose"
-                styleClass="secondary-button" prefWidth="120" prefHeight="35"/>
+    <HBox spacing="10" alignment="CENTER">
+        <Button text="Convert" onAction="#handleConvert" fx:id="convertBtn" styleClass="primary-btn" prefWidth="120"/>
+        <Button text="Close" onAction="#handleClose" styleClass="secondary-btn" prefWidth="120"/>
     </HBox>
 </VBox>

@@ -9,29 +9,29 @@
       spacing="16"
       styleClass="auth-root">
 
-    <!-- Main login card -->
+
     <StackPane styleClass="auth-card" maxWidth="520" maxHeight="360">
         <VBox alignment="CENTER" spacing="12" style="-fx-padding:20;">
 
-            <!-- App title -->
+
             <Label text="Trackify" styleClass="auth-title"/>
 
-            <!-- Subtitle -->
+
             <Label text="Sign in to your account" styleClass="auth-subtitle"/>
 
-            <!-- Username field -->
+
             <TextField fx:id="usernameField" promptText="Username" styleClass="auth-field"/>
 
-            <!-- Password field -->
+
             <PasswordField fx:id="passwordField" promptText="Password" styleClass="auth-field"/>
 
-            <!-- Buttons -->
+
             <HBox spacing="10" alignment="CENTER">
                 <Button text="Login" onAction="#handleLogin" styleClass="primary-btn"/>
                 <Button text="Register" onAction="#openRegister" styleClass="secondary-btn"/>
             </HBox>
 
-            <!-- Message label -->
+
             <Label fx:id="messageLabel" styleClass="auth-error"/>
 
         </VBox>

@@ -3,10 +3,7 @@ package App.models;
 import java.time.LocalDate;
 import java.util.Objects;
 
-/**
- * Transaction model.
- * Keep field names and getter/setter names consistent with DAOs and controllers.
- */
+
 public class Transaction {
 
     private String id;
@@ -20,19 +17,9 @@ public class Transaction {
     private String userId;
 
     public Transaction() {
-        // default no-arg constructor required by some tests / frameworks
     }
 
-    /**
-     * Full constructor used by tests
-     * @param date LocalDate
-     * @param customer customer name
-     * @param item item name
-     * @param paymentMethod payment method string
-     * @param revenue revenue amount
-     * @param cost cost amount
-     * @param notes notes
-     */
+
     public Transaction(LocalDate date, String customer, String item,
                        String paymentMethod, double revenue, double cost, String notes) {
         this.date = date;
@@ -73,19 +60,12 @@ public class Transaction {
     public void setCost(double cost) { this.cost = cost; }
 
     // --- profit ---
-    /**
-     * Derived profit (revenue - cost). Keep this computed to avoid drift.
-     */
+
     public double getProfit() {
         return this.revenue - this.cost;
     }
-    /**
-     * Optionally let callers set stored profit (if you persist it separately).
-     * In most places you don't need to call this; profit will be computed from revenue/cost.
-     */
+
     public void setProfit(double ignoredProfit) {
-        // intentionally no-op to avoid inconsistency; we rely on revenue-cost
-        // If you prefer to persist profit field separately, change this implementation.
     }
 
     // --- notes ---

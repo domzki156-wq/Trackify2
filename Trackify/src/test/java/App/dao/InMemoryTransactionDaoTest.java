@@ -13,13 +13,7 @@ import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-/**
- * Unit tests for InMemoryTransactionDao.
- * Tests CRUD operations and CSV export functionality.
- *
- * @author Trackify Team
- * @version 1.0
- */
+
 class InMemoryTransactionDaoTest {
 
     private TransactionDao dao;

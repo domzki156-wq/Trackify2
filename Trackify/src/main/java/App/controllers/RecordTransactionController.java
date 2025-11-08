@@ -6,17 +6,14 @@ import App.dao.TransactionDao;
 import App.dao.UserDao;
 import App.models.Transaction;
 import App.models.User;
+import javafx.application.Platform;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
 import javafx.stage.Stage;
 
 import java.time.LocalDate;
 
-/**
- * Controller for record-transaction.fxml
- * - exposes setOwner(Stage) and setOnSaved(Runnable)
- * - validates input, saves transaction via DAO and updates user balance
- */
+
 public class RecordTransactionController {
 
     @FXML private DatePicker datePicker;
@@ -26,122 +23,149 @@ public class RecordTransactionController {
     @FXML private TextField revenueField;
     @FXML private TextField costField;
     @FXML private TextArea notesArea;
-    @FXML private Label messageLabel;
-
-    // owner stage (modal) and onSaved callback
-    private Stage owner;
-    private Runnable onSaved;
+    @FXML private Button saveButton;
+    @FXML private Button cancelButton;
 
     private final TransactionDao txDao = DaoFactory.getTransactionDao();
     private final UserDao userDao = DaoFactory.getUserDao();
 
+
+    private Stage owner;
+    private Runnable onSaved;
+
     @FXML
-    private void initialize() {
-        // default values
-        if (datePicker != null) datePicker.setValue(LocalDate.now());
+    public void initialize() {
         if (paymentCombo != null) {
             paymentCombo.getItems().clear();
-            paymentCombo.getItems().addAll("CASH", "GCASH", "PAYPAL", "CARD");
+            paymentCombo.getItems().addAll("CASH", "GCASH", "PAYPAL", "CARD", "OTHER");
             paymentCombo.getSelectionModel().selectFirst();
         }
-        if (messageLabel != null) messageLabel.setText("");
+        if (datePicker != null) datePicker.setValue(LocalDate.now());
+
+        if (saveButton != null) saveButton.setOnAction(e -> {
+            try { handleSave(); } catch (Exception ex) { ex.printStackTrace(); }
+        });
+        if (cancelButton != null) cancelButton.setOnAction(e -> {
+            try { handleCancel(); } catch (Exception ex) { ex.printStackTrace(); }
+        });
     }
 
-    // called by DashboardController via reflection or directly
-    public void setOwner(Stage stage) {
-        this.owner = stage;
-    }
+    public void setOwner(Stage owner) { this.owner = owner; }
 
-    // called by DashboardController to be notified when saved
-    public void setOnSaved(Runnable r) {
-        this.onSaved = r;
-    }
+    public void setOnSaved(Runnable onSaved) { this.onSaved = onSaved; }
+
 
     @FXML
-    private void handleCancel() {
-        if (owner != null) owner.close(); else {
-            // fallback: try to hide any control's scene window
-            try { customerField.getScene().getWindow().hide(); } catch (Exception ignored) {}
+    public void handleSave() {
+        LocalDate date = datePicker != null ? datePicker.getValue() : LocalDate.now();
+        String customer = textOf(customerField);
+        String item = textOf(itemField);
+        String payment = paymentCombo != null ? paymentCombo.getSelectionModel().getSelectedItem() : "CASH";
+        double revenue = parseDouble(revenueField);
+        double cost = parseDouble(costField);
+        String notes = textOf(notesArea);
+
+        if ((customer.isEmpty() && item.isEmpty())) {
+            showAlert(Alert.AlertType.WARNING, "Validation", "Please enter at least a customer or item.");
+            return;
         }
-    }
 
-    @FXML
-    private void handleSave() {
+        Transaction tx = new Transaction();
+        tx.setDate(date);
+        tx.setCustomer(customer);
+        tx.setItem(item);
+        tx.setPaymentMethod(payment);
+        tx.setRevenue(revenue);
+        tx.setCost(cost);
+        tx.setProfit(revenue - cost);
+        tx.setNotes(notes);
+        if (Session.isAuthenticated() && Session.getCurrentUser() != null) {
+            tx.setUserId(Session.getCurrentUser().getId());
+        }
+
+        boolean saved = false;
         try {
-            // basic validation
-            LocalDate date = datePicker != null ? datePicker.getValue() : LocalDate.now();
-            String customer = customerField == null ? "" : customerField.getText().trim();
-            String item = itemField == null ? "" : itemField.getText().trim();
-            String payment = paymentCombo == null ? "CASH" : paymentCombo.getValue();
-            double revenue = parseDoubleSafe(revenueField, 0.0);
-            double cost = parseDoubleSafe(costField, 0.0);
-            String notes = notesArea == null ? "" : notesArea.getText().trim();
 
-            if (revenue < 0 || cost < 0) {
-                showMessage("Revenue and cost must be non-negative");
-                return;
-            }
-
-            // Build transaction and set owner userId
-            Transaction tx = new Transaction();
-            tx.setDate(date);
-            tx.setCustomer(customer);
-            tx.setItem(item);
-            tx.setPaymentMethod(payment);
-            tx.setRevenue(revenue);
-            tx.setCost(cost);
-            tx.setNotes(notes);
-            // compute profit in model (if model calculates profit by revenue - cost, ensure set)
-            tx.setProfit(revenue - cost);
-
-            if (!Session.isAuthenticated()) {
-                showMessage("Not authenticated - cannot save");
-                return;
-            }
-            User current = Session.getCurrentUser();
-            tx.setUserId(current.getId());
-
-            // Save transaction
-            Transaction saved = txDao.save(tx);
-
-            // Update user's wallet (add profit)
-            double newBalance = current.getBalance() + (saved.getProfit());
-            // If your UserDao provides updateBalance, call it; otherwise save the whole user
             try {
-                userDao.updateBalance(current.getId(), newBalance);
-            } catch (Exception ex) {
-                // fallback: update the user object and save
-                current.setBalance(newBalance);
-                userDao.save(current);
+                Object result = txDao.getClass().getMethod("save", Transaction.class).invoke(txDao, tx);
+                saved = interpretResult(result);
+            } catch (NoSuchMethodException nsme) {
+                String[] alt = new String[]{"insert","add","create","persist"};
+                for (String name : alt) {
+                    try {
+                        Object res = txDao.getClass().getMethod(name, Transaction.class).invoke(txDao, tx);
+                        saved = interpretResult(res);
+                        break;
+                    } catch (NoSuchMethodException ignored) { /* try next */ }
+                }
             }
-            // update session user so UI will reflect new balance
-            current.setBalance(newBalance);
-            Session.setCurrentUser(current);
-
-            // notify caller and close
-            if (onSaved != null) {
-                try { onSaved.run(); } catch (Exception ignored) {}
-            }
-
-            if (owner != null) owner.close(); else {
-                try { customerField.getScene().getWindow().hide(); } catch (Exception ignored) {}
-            }
-        } catch (Exception ex) {
+        } catch (Throwable ex) {
             ex.printStackTrace();
-            showMessage("Failed to save transaction: " + ex.getMessage());
+            saved = false;
+        }
+
+        if (!saved) {
+            showAlert(Alert.AlertType.ERROR, "Save failed", "Could not save transaction (DAO returned failure).");
+            return;
+        }
+
+        try {
+            if (Session.isAuthenticated() && Session.getCurrentUser() != null) {
+                User u = Session.getCurrentUser();
+                double bal = u.getBalance();
+                bal += revenue;
+                bal -= cost;
+                u.setBalance(bal);
+                try { userDao.updateBalance(u.getId(), bal); } catch (AbstractMethodError | NoSuchMethodError e) { userDao.save(u); }
+                Session.setCurrentUser(u);
+            }
+        } catch (Throwable ex) {
+            ex.printStackTrace();
+        }
+
+        if (onSaved != null) Platform.runLater(onSaved);
+
+        if (owner != null) owner.close();
+        else if (saveButton != null && saveButton.getScene() != null) {
+            Stage st = (Stage) saveButton.getScene().getWindow();
+            st.close();
         }
     }
 
-    // helper to parse double from textfield
-    private double parseDoubleSafe(TextField f, double defaultVal) {
-        if (f == null) return defaultVal;
-        String s = f.getText();
-        if (s == null || s.isBlank()) return defaultVal;
-        try { return Double.parseDouble(s.trim()); } catch (NumberFormatException ex) { return defaultVal; }
+
+    private boolean interpretResult(Object res) {
+        if (res == null) return true;
+        if (res instanceof Boolean) return (Boolean) res;
+        return true;
     }
 
-    private void showMessage(String m) {
-        if (messageLabel != null) messageLabel.setText(m);
-        else System.out.println("RecordTransactionController: " + m);
+    @FXML
+    public void handleCancel() {
+        if (owner != null) owner.close();
+        else if (cancelButton != null && cancelButton.getScene() != null) {
+            ((Stage) cancelButton.getScene().getWindow()).close();
+        }
+    }
+
+    private static String textOf(TextInputControl t) {
+        if (t == null) return "";
+        String s = t.getText();
+        return s == null ? "" : s.trim();
+    }
+
+    private static double parseDouble(TextField f) {
+        if (f == null) return 0.0;
+        String s = f.getText();
+        if (s == null || s.trim().isEmpty()) return 0.0;
+        try { return Double.parseDouble(s.trim()); } catch (NumberFormatException ex) { return 0.0; }
+    }
+
+    private void showAlert(Alert.AlertType type, String title, String msg) {
+        Alert a = new Alert(type);
+        a.setTitle(title);
+        a.setHeaderText(null);
+        a.setContentText(msg);
+        if (owner != null) a.initOwner(owner);
+        a.showAndWait();
     }
 }

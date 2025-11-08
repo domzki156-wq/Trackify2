@@ -16,18 +16,14 @@ import java.util.Optional;
 
 import static com.mongodb.client.model.Filters.eq;
 
-/**
- * Mongo-backed Transaction DAO.
- * - stores transactions in "transactions" collection
- * - expects a "userId" field on each document to isolate user data
- */
+
 public class MongoTransactionDao implements TransactionDao {
     private final MongoCollection<Document> coll;
 
     public MongoTransactionDao() {
         MongoDatabase db = MongoDBConnection.getDatabase();
         this.coll = db.getCollection("transactions");
-        // index by date for sort and by userId for per-user queries
+
         coll.createIndex(new Document("date", -1));
         coll.createIndex(new Document("userId", 1));
     }
@@ -43,7 +39,7 @@ public class MongoTransactionDao implements TransactionDao {
                 .append("profit", t.getProfit())
                 .append("notes", t.getNotes());
 
-        // attach userId if present
+
         if (t.getUserId() != null && !t.getUserId().isBlank()) {
             d.append("userId", t.getUserId());
         }
@@ -52,7 +48,6 @@ public class MongoTransactionDao implements TransactionDao {
             try {
                 d.put("_id", new ObjectId(t.getId()));
             } catch (IllegalArgumentException ex) {
-                // if it's not a valid ObjectId, store as-is (string)
                 d.put("_id", t.getId());
             }
         }
@@ -70,10 +65,10 @@ public class MongoTransactionDao implements TransactionDao {
             t.setId(_id.toString());
         }
 
-        // userId (may be null)
+
         t.setUserId(d.getString("userId"));
 
-        // parse date if present
+
         String dateStr = d.getString("date");
         if (dateStr != null && !dateStr.isBlank()) {
             try {
@@ -85,7 +80,7 @@ public class MongoTransactionDao implements TransactionDao {
         t.setItem(d.getString("item"));
         t.setPaymentMethod(d.getString("payment"));
 
-        // revenue/cost might be Integer or Double or String in some documents -> handle generically
+
         Object revObj = d.get("revenue");
         if (revObj instanceof Number) {
             t.setRevenue(((Number) revObj).doubleValue());
@@ -100,14 +95,13 @@ public class MongoTransactionDao implements TransactionDao {
             try { t.setCost(Double.parseDouble(costObj.toString())); } catch (Exception ignored) {}
         }
 
-        // profit may be stored, but if not present, recalc from revenue/cost
+
         Object profitObj = d.get("profit");
         if (profitObj instanceof Number) {
             t.setProfit(((Number) profitObj).doubleValue());
         } else if (profitObj != null) {
             try { t.setProfit(Double.parseDouble(profitObj.toString())); } catch (Exception ignored) {}
         } else {
-            // ensure profit consistent
             t.setProfit(t.getRevenue() - t.getCost());
         }
 
@@ -117,23 +111,20 @@ public class MongoTransactionDao implements TransactionDao {
 
     @Override
     public Transaction save(Transaction transaction) {
-        // Ensure userId present: fallback to Session (if available) would be done by caller or service.
-        // But we still keep as-is here.
+
         Document doc = toDocument(transaction);
 
         if (transaction.getId() == null || transaction.getId().isBlank()) {
-            // Insert and obtain inserted id
+
             InsertOneResult res = coll.insertOne(doc);
             if (res.getInsertedId() != null) {
                 ObjectId oid = null;
                 try {
-                    // inserted id may be an ObjectId
                     oid = res.getInsertedId().asObjectId().getValue();
                 } catch (Exception ignored) {}
                 if (oid != null) transaction.setId(oid.toHexString());
                 else transaction.setId(res.getInsertedId().toString());
             } else {
-                // backup: if driver didn't provide inserted id, try reading _id from doc
                 Object insertedId = doc.get("_id");
                 if (insertedId instanceof ObjectId) {
                     transaction.setId(((ObjectId) insertedId).toHexString());
@@ -142,7 +133,6 @@ public class MongoTransactionDao implements TransactionDao {
                 }
             }
         } else {
-            // Replace existing document; attempt ObjectId first
             try {
                 coll.replaceOne(eq("_id", new ObjectId(transaction.getId())), doc);
             } catch (IllegalArgumentException ex) {
