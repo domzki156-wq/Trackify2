@@ -1,77 +1,54 @@
 <?xml version="1.0" encoding="UTF-8"?>
-
 <?import javafx.geometry.Insets?>
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
 
-<VBox xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1"
-      fx:controller="App.controllers.RecordTransactionController"
-      spacing="15" styleClass="dialog-container" prefWidth="500" prefHeight="500">
+<StackPane xmlns="http://javafx.com/javafx/8"
+           xmlns:fx="http://javafx.com/fxml/1"
+           fx:controller="App.controllers.RecordTransactionController"
+           style="-fx-background-color: #1a1d29;"
+           prefWidth="500" prefHeight="600">
 
-    <padding>
-        <Insets top="20" right="20" bottom="20" left="20"/>
-    </padding>
+    <VBox spacing="10" alignment="CENTER" style="-fx-padding:20;">
+        <Label text="Record Transaction" styleClass="auth-title"/>
 
-    <Label text="Record New Transaction" styleClass="dialog-title"/>
+        <GridPane hgap="10" vgap="10">
+            <columnConstraints>
+                <ColumnConstraints halignment="RIGHT" prefWidth="120"/>
+                <ColumnConstraints prefWidth="300"/>
+            </columnConstraints>
 
-    <Separator/>
+            <rowConstraints>
+                <RowConstraints vgrow="NEVER"/>
+            </rowConstraints>
 
-    <!-- Date -->
-    <VBox spacing="5">
-        <Label text="Date:" styleClass="field-label"/>
-        <DatePicker fx:id="datePicker" prefWidth="460" styleClass="input-field"/>
+            <Label text="Date:" GridPane.rowIndex="0" GridPane.columnIndex="0"/>
+            <DatePicker fx:id="datePicker" GridPane.rowIndex="0" GridPane.columnIndex="1"/>
+
+            <Label text="Customer:" GridPane.rowIndex="1" GridPane.columnIndex="0"/>
+            <TextField fx:id="customerField" promptText="Customer name" GridPane.rowIndex="1" GridPane.columnIndex="1"/>
+
+            <Label text="Item:" GridPane.rowIndex="2" GridPane.columnIndex="0"/>
+            <TextField fx:id="itemField" promptText="Item name" GridPane.rowIndex="2" GridPane.columnIndex="1"/>
+
+            <Label text="Payment:" GridPane.rowIndex="3" GridPane.columnIndex="0"/>
+            <ComboBox fx:id="paymentCombo" GridPane.rowIndex="3" GridPane.columnIndex="1"/>
+
+            <Label text="Revenue:" GridPane.rowIndex="4" GridPane.columnIndex="0"/>
+            <TextField fx:id="revenueField" promptText="0.00" GridPane.rowIndex="4" GridPane.columnIndex="1"/>
+
+            <Label text="Cost:" GridPane.rowIndex="5" GridPane.columnIndex="0"/>
+            <TextField fx:id="costField" promptText="0.00" GridPane.rowIndex="5" GridPane.columnIndex="1"/>
+
+            <Label text="Notes:" GridPane.rowIndex="6" GridPane.columnIndex="0" GridPane.valignment="TOP"/>
+            <TextArea fx:id="notesArea" prefRowCount="3" promptText="Additional notes..." GridPane.rowIndex="6" GridPane.columnIndex="1"/>
+        </GridPane>
+
+        <Label fx:id="messageLabel" styleClass="auth-error" text=""/>
+
+        <HBox spacing="15" alignment="CENTER">
+            <Button text="Save" onAction="#handleSave" styleClass="primary-btn"/>
+            <Button text="Cancel" onAction="#handleCancel" styleClass="secondary-btn"/>
+        </HBox>
     </VBox>
-
-    <!-- Customer -->
-    <VBox spacing="5">
-        <Label text="Customer:" styleClass="field-label"/>
-        <TextField fx:id="customerField" promptText="Enter customer name"
-                   styleClass="input-field"/>
-    </VBox>
-
-    <!-- Item -->
-    <VBox spacing="5">
-        <Label text="Item:" styleClass="field-label"/>
-        <TextField fx:id="itemField" promptText="Enter item description"
-                   styleClass="input-field"/>
-    </VBox>
-
-    <!-- Payment Method -->
-    <VBox spacing="5">
-        <Label text="Payment Method:" styleClass="field-label"/>
-        <ComboBox fx:id="paymentMethodCombo" prefWidth="460" styleClass="input-field"/>
-    </VBox>
-
-    <!-- Revenue and Cost -->
-    <HBox spacing="10">
-        <VBox spacing="5">
-            <Label text="Revenue (USD):" styleClass="field-label"/>
-            <TextField fx:id="revenueField" promptText="0.00" styleClass="input-field"/>
-            <HBox.hgrow>ALWAYS</HBox.hgrow>
-        </VBox>
-
-        <VBox spacing="5">
-            <Label text="Cost (USD):" styleClass="field-label"/>
-            <TextField fx:id="costField" promptText="0.00" styleClass="input-field"/>
-            <HBox.hgrow>ALWAYS</HBox.hgrow>
-        </VBox>
-    </HBox>
-
-    <!-- Notes -->
-    <VBox spacing="5">
-        <Label text="Notes (Optional):" styleClass="field-label"/>
-        <TextArea fx:id="notesArea" promptText="Enter any additional notes..."
-                  prefRowCount="4" styleClass="input-field"/>
-        <VBox.vgrow>ALWAYS</VBox.vgrow>
-    </VBox>
-
-    <Separator/>
-
-    <!-- Action Buttons -->
-    <HBox spacing="10" alignment="CENTER_RIGHT">
-        <Button fx:id="cancelButton" text="Cancel" onAction="#handleCancel"
-                styleClass="secondary-button" prefWidth="120" prefHeight="35"/>
-        <Button fx:id="saveButton" text="Save Transaction" onAction="#handleSave"
-                styleClass="primary-button" prefWidth="150" prefHeight="35"/>
-    </HBox>
-</VBox>
+</StackPane>
