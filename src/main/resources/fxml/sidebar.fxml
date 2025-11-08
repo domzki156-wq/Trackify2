@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<VBox xmlns="http://javafx.com/javafx/21"
+      xmlns:fx="http://javafx.com/fxml/1"
+      fx:controller="App.controllers.SidebarController"
+      spacing="16"
+      style="-fx-padding: 18; -fx-background-color: #11131a;"
+      prefWidth="360">
+
+    <Label text="Wallet Actions" style="-fx-font-size:18px; -fx-text-fill: white; -fx-font-weight: bold;"/>
+
+
+    <VBox spacing="6">
+        <Label text="Deposit" style="-fx-text-fill: #ddd;"/>
+        <HBox spacing="8">
+            <TextField fx:id="depositAmountField" promptText="Amount ($)" />
+            <Button text="Deposit" fx:id="depositBtn" onAction="#handleDeposit" />
+        </HBox>
+    </VBox>
+
+
+    <VBox spacing="6">
+        <Label text="Withdraw" style="-fx-text-fill: #ddd;"/>
+        <HBox spacing="8">
+            <TextField fx:id="withdrawAmountField" promptText="Amount ($)" />
+            <Button text="Withdraw" fx:id="withdrawBtn" onAction="#handleWithdraw" />
+        </HBox>
+    </VBox>
+
+
+    <VBox spacing="6">
+        <Label text="Buy Item" style="-fx-text-fill: #ddd;"/>
+        <GridPane hgap="8" vgap="8">
+            <columnConstraints>
+                <ColumnConstraints percentWidth="30"/>
+                <ColumnConstraints percentWidth="70"/>
+            </columnConstraints>
+
+            <Label text="Customer:" GridPane.rowIndex="0" GridPane.columnIndex="0" style="-fx-text-fill: #ccc;"/>
+            <TextField fx:id="buyCustomerField" GridPane.rowIndex="0" GridPane.columnIndex="1" />
+
+            <Label text="Item:" GridPane.rowIndex="1" GridPane.columnIndex="0" style="-fx-text-fill: #ccc;"/>
+            <TextField fx:id="buyItemField" GridPane.rowIndex="1" GridPane.columnIndex="1" />
+
+            <Label text="Payment:" GridPane.rowIndex="2" GridPane.columnIndex="0" style="-fx-text-fill: #ccc;"/>
+            <ComboBox fx:id="buyPaymentCombo" GridPane.rowIndex="2" GridPane.columnIndex="1"/>
+
+            <Label text="Revenue:" GridPane.rowIndex="3" GridPane.columnIndex="0" style="-fx-text-fill: #ccc;"/>
+            <TextField fx:id="buyRevenueField" GridPane.rowIndex="3" GridPane.columnIndex="1"/>
+
+            <Label text="Cost:" GridPane.rowIndex="4" GridPane.columnIndex="0" style="-fx-text-fill: #ccc;"/>
+            <TextField fx:id="buyCostField" GridPane.rowIndex="4" GridPane.columnIndex="1"/>
+        </GridPane>
+
+        <HBox spacing="8" alignment="CENTER_RIGHT">
+            <Button text="Record Buy" onAction="#handleBuyItem" fx:id="buyBtn"/>
+        </HBox>
+    </VBox>
+
+    <Separator />
+
+    <Label fx:id="messageLabel" text="" style="-fx-text-fill: #ffb3b3;" wrapText="true"/>
+
+</VBox>

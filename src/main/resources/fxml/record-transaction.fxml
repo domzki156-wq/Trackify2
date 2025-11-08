@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<StackPane xmlns="http://javafx.com/javafx/8"
+           xmlns:fx="http://javafx.com/fxml/1"
+           fx:controller="App.controllers.RecordTransactionController"
+           style="-fx-background-color: #1a1d29;"
+           prefWidth="500" prefHeight="600">
+
+    <VBox spacing="10" alignment="CENTER" style="-fx-padding:20;">
+        <Label text="Record Transaction" styleClass="auth-title"/>
+
+        <GridPane hgap="10" vgap="10">
+            <columnConstraints>
+                <ColumnConstraints halignment="RIGHT" prefWidth="120"/>
+                <ColumnConstraints prefWidth="300"/>
+            </columnConstraints>
+
+            <rowConstraints>
+                <RowConstraints vgrow="NEVER"/>
+            </rowConstraints>
+
+            <Label text="Date:" GridPane.rowIndex="0" GridPane.columnIndex="0"/>
+            <DatePicker fx:id="datePicker" GridPane.rowIndex="0" GridPane.columnIndex="1"/>
+
+            <Label text="Customer:" GridPane.rowIndex="1" GridPane.columnIndex="0"/>
+            <TextField fx:id="customerField" promptText="Customer name" GridPane.rowIndex="1" GridPane.columnIndex="1"/>
+
+            <Label text="Item:" GridPane.rowIndex="2" GridPane.columnIndex="0"/>
+            <TextField fx:id="itemField" promptText="Item name" GridPane.rowIndex="2" GridPane.columnIndex="1"/>
+
+            <Label text="Payment:" GridPane.rowIndex="3" GridPane.columnIndex="0"/>
+            <ComboBox fx:id="paymentCombo" GridPane.rowIndex="3" GridPane.columnIndex="1"/>
+
+            <Label text="Revenue:" GridPane.rowIndex="4" GridPane.columnIndex="0"/>
+            <TextField fx:id="revenueField" promptText="0.00" GridPane.rowIndex="4" GridPane.columnIndex="1"/>
+
+            <Label text="Cost:" GridPane.rowIndex="5" GridPane.columnIndex="0"/>
+            <TextField fx:id="costField" promptText="0.00" GridPane.rowIndex="5" GridPane.columnIndex="1"/>
+
+            <Label text="Notes:" GridPane.rowIndex="6" GridPane.columnIndex="0" GridPane.valignment="TOP"/>
+            <TextArea fx:id="notesArea" prefRowCount="3" promptText="Additional notes..." GridPane.rowIndex="6" GridPane.columnIndex="1"/>
+        </GridPane>
+
+        <Label fx:id="messageLabel" styleClass="auth-error" text=""/>
+
+        <HBox spacing="15" alignment="CENTER">
+            <Button text="Save" onAction="#handleSave" styleClass="primary-btn"/>
+            <Button text="Cancel" onAction="#handleCancel" styleClass="secondary-btn"/>
+        </HBox>
+    </VBox>
+</StackPane>

@@ -1,0 +1,153 @@
+
+.root-container {
+    -fx-background-color: #16171b; /* slightly darker base */
+    -fx-font-family: "Segoe UI", Arial, sans-serif;
+    -fx-font-size: 13px;
+}
+
+
+.kpi-card {
+    -fx-background-color: linear-gradient(#22232b, #1f2128);
+    -fx-background-radius: 10;
+    -fx-padding: 14 20 14 20;
+    -fx-effect: dropshadow( gaussian , rgba(0,0,0,0.45) , 10, 0.0 , 0 , 2 );
+}
+.kpi-label { -fx-text-fill: #9aa0b8; -fx-font-size: 12px; }
+.kpi-value { -fx-text-fill: #ffffff; -fx-font-size: 22px; -fx-font-weight: bold; }
+
+
+.wallet-card-usd { -fx-background-color: linear-gradient(#3b86d9, #326fbf); -fx-background-radius: 10; -fx-padding: 12; }
+.wallet-card-php { -fx-background-color: linear-gradient(#ff9449, #ff7a2b); -fx-background-radius: 10; -fx-padding: 12; }
+.wallet-label { -fx-text-fill: rgba(255,255,255,0.92); }
+.wallet-value { -fx-text-fill: #fff; -fx-font-size: 20px; -fx-font-weight: 700; }
+
+
+.transaction-table {
+    -fx-background-color: transparent;
+    -fx-control-inner-background: transparent;
+}
+
+
+.transaction-table .column-header-background {
+    -fx-background-color: transparent;
+}
+.transaction-table .column-header {
+    -fx-background-color: transparent;
+}
+.transaction-table .column-header .label {
+    -fx-text-fill: #9aa0b8;
+    -fx-font-size: 13px;
+    -fx-font-weight: 700;
+    -fx-padding: 10 0 10 0;
+}
+
+
+.transaction-table .table-row-cell {
+    -fx-background-color: linear-gradient(#23252b, #1f2126);
+    -fx-border-color: transparent;
+    -fx-border-width: 0 0 1 0;
+    -fx-border-style: solid;
+    -fx-border-color: rgba(255,255,255,0.03);
+}
+.transaction-table .table-row-cell:odd { -fx-background-color: linear-gradient(#26282f, #1f2126); }
+.transaction-table .table-row-cell:selected {
+    -fx-background-color: linear-gradient(#346fcf, #2f61c6);
+    -fx-text-fill: #fff;
+}
+
+
+.transaction-table .table-cell {
+    -fx-text-fill: rgba(255,255,255,0.95);
+    -fx-padding: 8 10 8 10;
+}
+
+
+.table-view .placeholder {
+    -fx-text-fill: rgba(255,255,255,0.45);
+}
+
+
+.button {
+    -fx-background-radius: 10;
+    -fx-font-weight: bold;
+    -fx-effect: dropshadow( gaussian , rgba(0,0,0,0.18) , 10, 0.0 , 0 , 2 );
+    -fx-cursor: hand;
+}
+
+
+.action-button-green {
+    -fx-background-color: linear-gradient(#00ffa6, #00e388);
+    -fx-text-fill: #081018;
+    -fx-padding: 10 20 10 20;
+}
+.action-button-green:hover { -fx-scale-x: 1.02; -fx-scale-y: 1.02; -fx-effect: dropshadow( gaussian , rgba(0,255,166,0.22) , 12, 0.0 , 0 , 4 ); }
+
+.action-button-red { -fx-background-color: linear-gradient(#ff6b6b, #ff4d4d); -fx-text-fill: #fff; }
+.action-button-blue { -fx-background-color: linear-gradient(#6ea6ff, #4c8cf5); -fx-text-fill: #fff; }
+.action-button-purple { -fx-background-color: linear-gradient(#b280ff, #9a58f2); -fx-text-fill: #fff; }
+.action-button-orange { -fx-background-color: linear-gradient(#ff9d55, #ff7a2b); -fx-text-fill: #fff; }
+.action-button-red-dark { -fx-background-color: linear-gradient(#d9534f, #c23b38); -fx-text-fill: #fff; }
+
+
+.dialog-pane {
+    -fx-background-color: linear-gradient(#1b1d22, #16171b);
+    -fx-border-color: rgba(255,255,255,0.03);
+    -fx-border-width: 1;
+    -fx-background-radius: 12;
+    -fx-border-radius: 12;
+}
+
+.dialog-pane .content.label {
+    -fx-text-fill: rgba(255,255,255,0.92);
+}
+
+.dialog-pane .header-panel .label {
+    -fx-text-fill: rgba(255,255,255,0.95);
+    -fx-font-weight: 700;
+}
+
+.text-field, .text-area, .combo-box, .date-picker .text-field {
+    -fx-background-color: linear-gradient(#16171b, #121317);
+    -fx-text-fill: rgba(255,255,255,0.95);
+    -fx-prompt-text-fill: rgba(255,255,255,0.35);
+    -fx-border-color: rgba(255,255,255,0.06);
+    -fx-border-radius: 8;
+    -fx-background-radius: 8;
+    -fx-padding: 8;
+    -fx-font-size: 13px;
+}
+
+.text-field:focused, .text-area:focused, .combo-box:focused {
+    -fx-border-color: #4f8cf8;
+    -fx-border-width: 2;
+}
+
+
+.date-picker-popup { -fx-background-color: #16171b; }
+
+
+.list-cell {
+    -fx-background-color: #346fcf;
+}
+.wallet-list-left {
+    -fx-text-fill: #000000; /* the request: make left text black */
+}
+.wallet-list-amount {
+    -fx-font-weight: bold;
+}
+
+
+.hbox-centered { -fx-alignment: center; }
+
+
+.scroll-bar .thumb {
+    -fx-background-color: rgba(255,255,255,0.06);
+    -fx-background-radius: 8;
+}
+
+.text-area {
+    -fx-control-inner-background: #121317; /* dark background */
+    -fx-text-fill: rgba(255,255,255,0.95);
+    -fx-highlight-fill: #4f8cf8;
+    -fx-highlight-text-fill: #ffffff;
+}
