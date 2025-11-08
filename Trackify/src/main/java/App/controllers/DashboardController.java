@@ -3,29 +3,33 @@ package App.controllers;
 import App.Session;
 import App.dao.DaoFactory;
 import App.dao.TransactionDao;
+import App.dao.UserDao;
 import App.models.Transaction;
+import App.models.User;
 import javafx.application.Platform;
-import javafx.collections.FXCollections;
-import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
+import javafx.fxml.FXMLLoader;
+import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
 
+import java.lang.reflect.Method;
+import java.nio.file.Path;
 import java.time.LocalDate;
-import java.time.temporal.WeekFields;
 import java.util.List;
-import java.util.Locale;
-import java.util.concurrent.CompletableFuture;
+import java.util.Optional;
 
 /**
- * DashboardController — displays transactions and KPIs.
- * Includes handlers referenced by dashboard.fxml (record, delete, export, buy items, currency converter, deposit, withdraw).
+ * DashboardController - shows transactions and wallet.
+ * This version uses reflection when interacting with the record-transaction controller
+ * so it compiles even if that controller does not expose helper setters.
  */
 public class DashboardController {
 
+    // KPI labels (from your dashboard.fxml)
     @FXML private Label revenueLabel;
     @FXML private Label costLabel;
     @FXML private Label totalProfitLabel;
@@ -34,6 +38,7 @@ public class DashboardController {
     @FXML private Label usdWalletLabel;
     @FXML private Label phpEquivalentLabel;
 
+    // Table and columns (must match fx:id)
     @FXML private TableView<Transaction> transactionTable;
     @FXML private TableColumn<Transaction, LocalDate> dateColumn;
     @FXML private TableColumn<Transaction, String> customerColumn;
@@ -44,241 +49,345 @@ public class DashboardController {
     @FXML private TableColumn<Transaction, Double> profitColumn;
     @FXML private TableColumn<Transaction, String> notesColumn;
 
-    private final TransactionDao transactionDao = DaoFactory.getTransactionDao();
-    private final ObservableList<Transaction> transactionList = FXCollections.observableArrayList();
+    // DAOs
+    private final UserDao userDao = DaoFactory.getUserDao();
+    private final TransactionDao txDao = DaoFactory.getTransactionDao();
 
-    private double usdBalance = 22.39;
-    private static final double EXCHANGE_RATE = 59.07;
+    // in-memory wallet representation (keeps UI in sync)
+    private double usdBalance = 0.0;
 
     @FXML
     public void initialize() {
-        setupTableColumns();
-        loadAllTransactionsAsync();
-    }
-
-    private void setupTableColumns() {
-        dateColumn.setCellValueFactory(new PropertyValueFactory<>("date"));
-        customerColumn.setCellValueFactory(new PropertyValueFactory<>("customer"));
-        itemColumn.setCellValueFactory(new PropertyValueFactory<>("item"));
-        paymentColumn.setCellValueFactory(new PropertyValueFactory<>("paymentMethod"));
-        revenueColumn.setCellValueFactory(new PropertyValueFactory<>("revenue"));
-        costColumn.setCellValueFactory(new PropertyValueFactory<>("cost"));
-        profitColumn.setCellValueFactory(new PropertyValueFactory<>("profit"));
-        notesColumn.setCellValueFactory(new PropertyValueFactory<>("notes"));
-    }
-
-    private void loadAllTransactionsAsync() {
-        String userId = Session.getCurrentUser() == null ? null : Session.getCurrentUser().getId();
-        if (userId == null) {
-            transactionList.clear();
-            transactionTable.setItems(transactionList);
-            return;
-        }
-
-        CompletableFuture.runAsync(() -> {
-            try {
-                List<Transaction> transactions = transactionDao.findAllForUser(userId);
-                Platform.runLater(() -> {
-                    transactionList.setAll(transactions);
-                    transactionTable.setItems(transactionList);
-                    updateKPIs();
-                });
-            } catch (Exception e) {
-                e.printStackTrace();
-                Platform.runLater(() -> showError("Load Error", e.getMessage()));
-            }
-        });
-    }
-
-    private void updateKPIs() {
-        double totalRevenue = transactionList.stream().mapToDouble(Transaction::getRevenue).sum();
-        double totalCost = transactionList.stream().mapToDouble(Transaction::getCost).sum();
-        double totalProfit = totalRevenue - totalCost;
-
-        LocalDate now = LocalDate.now();
-        WeekFields wf = WeekFields.of(Locale.getDefault());
-        int currentWeek = now.get(wf.weekOfWeekBasedYear());
-        int currentYear = now.getYear();
-
-        double weeklyProfit = transactionList.stream()
-                .filter(t -> t.getDate() != null &&
-                        t.getDate().getYear() == currentYear &&
-                        t.getDate().get(wf.weekOfWeekBasedYear()) == currentWeek)
-                .mapToDouble(Transaction::getProfit).sum();
-
-        double monthlyProfit = transactionList.stream()
-                .filter(t -> t.getDate() != null &&
-                        t.getDate().getYear() == currentYear &&
-                        t.getDate().getMonthValue() == now.getMonthValue())
-                .mapToDouble(Transaction::getProfit).sum();
-
-        revenueLabel.setText(String.format("$%.2f", totalRevenue));
-        costLabel.setText(String.format("$%.2f", totalCost));
-        totalProfitLabel.setText(String.format("$%.2f", totalProfit));
-        weeklyProfitLabel.setText(String.format("$%.2f", weeklyProfit));
-        monthlyProfitLabel.setText(String.format("$%.2f", monthlyProfit));
-        usdWalletLabel.setText(String.format("$%.2f", usdBalance));
-        phpEquivalentLabel.setText(String.format("₱%.2f", usdBalance * EXCHANGE_RATE));
-    }
-
-    // ------------------ FXML Handlers ------------------
-
-    @FXML
-    private void handleRecordTransaction() {
+        // Configure cell value factories (in case FXML didn't set them)
         try {
-            javafx.fxml.FXMLLoader loader = new javafx.fxml.FXMLLoader(getClass().getResource("/fxml/record-transaction.fxml"));
-            javafx.scene.Parent root = loader.load();
-            RecordTransactionController controller = loader.getController();
+            if (dateColumn != null) dateColumn.setCellValueFactory(new PropertyValueFactory<>("date"));
+            if (customerColumn != null) customerColumn.setCellValueFactory(new PropertyValueFactory<>("customer"));
+            if (itemColumn != null) itemColumn.setCellValueFactory(new PropertyValueFactory<>("item"));
+            if (paymentColumn != null) paymentColumn.setCellValueFactory(new PropertyValueFactory<>("paymentMethod"));
+            if (revenueColumn != null) revenueColumn.setCellValueFactory(new PropertyValueFactory<>("revenue"));
+            if (costColumn != null) costColumn.setCellValueFactory(new PropertyValueFactory<>("cost"));
+            if (profitColumn != null) profitColumn.setCellValueFactory(new PropertyValueFactory<>("profit"));
+            if (notesColumn != null) notesColumn.setCellValueFactory(new PropertyValueFactory<>("notes"));
 
-            Stage stage = new Stage();
-            stage.setTitle("Record Transaction");
-            stage.initModality(Modality.APPLICATION_MODAL);
-            stage.setScene(new Scene(root));
-            stage.setResizable(false);
-            stage.showAndWait();
-
-            controller.getResult().ifPresent(tx -> {
-                // record was saved in controller — just refresh view
-                loadAllTransactionsAsync();
-                usdBalance += tx.getProfit();
-                updateKPIs();
-            });
-        } catch (Exception e) {
-            e.printStackTrace();
-            showError("Error", "Failed to open record transaction dialog: " + e.getMessage());
-        }
-    }
-
-    @FXML
-    private void handleDeleteSelected() {
-        Transaction selected = transactionTable.getSelectionModel().getSelectedItem();
-        if (selected == null) { showWarning("No Selection", "Please select a transaction to delete."); return; }
-
-        String currentUserId = Session.getCurrentUser() == null ? null : Session.getCurrentUser().getId();
-        if (currentUserId == null || !currentUserId.equals(selected.getUserId())) {
-            showError("Permission denied", "You can only delete your own transactions.");
-            return;
-        }
-
-        Alert confirm = new Alert(Alert.AlertType.CONFIRMATION, "Delete this transaction?", ButtonType.OK, ButtonType.CANCEL);
-        confirm.setHeaderText("Delete Transaction");
-        confirm.showAndWait().ifPresent(btn -> {
-            if (btn == ButtonType.OK) {
-                CompletableFuture.runAsync(() -> {
-                    boolean ok = transactionDao.deleteById(selected.getId());
-                    Platform.runLater(() -> {
-                        if (ok) {
-                            transactionList.remove(selected);
-                            updateKPIs();
-                            showInfo("Success", "Transaction deleted.");
-                        } else showError("Error", "Failed to delete transaction.");
-                    });
-                });
-            }
-        });
-    }
-
-    @FXML
-    private void handleExportCsv() {
-        String userId = Session.getCurrentUser() == null ? null : Session.getCurrentUser().getId();
-        if (userId == null) { showError("Not authenticated", "Please login."); return; }
-
-        CompletableFuture.runAsync(() -> {
-            try {
-                List<Transaction> toExport = transactionDao.findAllForUser(userId);
-                java.nio.file.Path path = java.nio.file.Paths.get("exports", "transactions-" + userId + ".csv");
-                java.nio.file.Files.createDirectories(path.getParent());
-                try (java.io.BufferedWriter writer = java.nio.file.Files.newBufferedWriter(path)) {
-                    writer.write("Date,Customer,Item,Payment Method,Revenue,Cost,Profit,Notes");
-                    writer.newLine();
-                    for (Transaction t : toExport) {
-                        String line = String.format("%s,%s,%s,%s,%.2f,%.2f,%.2f,%s",
-                                t.getDate() == null ? "" : t.getDate().toString(),
-                                escapeCsv(t.getCustomer()), escapeCsv(t.getItem()),
-                                escapeCsv(t.getPaymentMethod()), t.getRevenue(), t.getCost(),
-                                t.getProfit(), escapeCsv(t.getNotes()));
-                        writer.write(line); writer.newLine();
-                    }
+            // formatting cells for readability
+            if (dateColumn != null) dateColumn.setCellFactory(col -> new TableCell<>() {
+                @Override protected void updateItem(LocalDate item, boolean empty) {
+                    super.updateItem(item, empty);
+                    setText(empty || item == null ? "" : item.toString());
                 }
-                Platform.runLater(() -> showInfo("Exported", "CSV exported to exports folder."));
-            } catch (Exception e) {
-                e.printStackTrace();
-                Platform.runLater(() -> showError("Export Failed", e.getMessage()));
-            }
+            });
+            if (revenueColumn != null) revenueColumn.setCellFactory(col -> new TableCell<>() {
+                @Override protected void updateItem(Double item, boolean empty) {
+                    super.updateItem(item, empty);
+                    setText(empty || item == null ? "" : String.format("$%.2f", item));
+                }
+            });
+            if (costColumn != null) costColumn.setCellFactory(col -> new TableCell<>() {
+                @Override protected void updateItem(Double item, boolean empty) {
+                    super.updateItem(item, empty);
+                    setText(empty || item == null ? "" : String.format("$%.2f", item));
+                }
+            });
+            if (profitColumn != null) profitColumn.setCellFactory(col -> new TableCell<>() {
+                @Override protected void updateItem(Double item, boolean empty) {
+                    super.updateItem(item, empty);
+                    setText(empty || item == null ? "" : String.format("$%.2f", item));
+                }
+            });
+        } catch (Exception ex) {
+            ex.printStackTrace();
+        }
+
+        // Load user & transaction data once JavaFX has finished building the scene
+        Platform.runLater(this::loadUserData);
+    }
+
+    // Refresh user info and transactions from DB
+    private void loadUserData() {
+        if (!Session.isAuthenticated()) return;
+
+        User sessionUser = Session.getCurrentUser();
+        Optional<User> fresh = userDao.findById(sessionUser.getId());
+        fresh.ifPresent(user -> {
+            Session.setCurrentUser(user);
+            usdBalance = user.getBalance();
+            updateWalletLabel();
         });
+
+        loadTransactions();
+        updateKpis(); // recompute KPI labels (basic)
     }
 
-    // This method was missing and caused FXMLLoader to fail.
-    @FXML
-    private void handleBuyItems() {
-        // placeholder — show the buy items dialog when you implement inventory
-        showInfo("Buy Items", "Buy Items feature will be implemented soon.");
+    private void loadTransactions() {
+        if (transactionTable != null) transactionTable.getItems().clear();
+        if (!Session.isAuthenticated()) {
+            System.out.println("loadTransactions: no authenticated session.");
+            return;
+        }
+
+        String userId = Session.getCurrentUser().getId();
+        System.out.println("loadTransactions: fetching for userId=" + userId);
+
+        List<Transaction> txs = txDao.findAllForUser(userId);
+        System.out.println("loadTransactions: dao returned " + (txs == null ? 0 : txs.size()) + " transactions.");
+        if (txs != null && !txs.isEmpty()) {
+            for (Transaction tx : txs) {
+                System.out.println("  tx id=" + tx.getId() + " date=" + tx.getDate() + " item=" + tx.getItem());
+            }
+            if (transactionTable != null) transactionTable.getItems().addAll(txs);
+        }
+        updateKpis();
     }
 
+    // recompute simple KPI totals to reflect table contents
+    private void updateKpis() {
+        double revenue = 0.0, cost = 0.0, weeklyProfit = 0.0, monthlyProfit = 0.0;
+        LocalDate now = LocalDate.now();
+
+        if (transactionTable != null) {
+            for (Transaction t : transactionTable.getItems()) {
+                revenue += t.getRevenue();
+                cost += t.getCost();
+
+                // weekly profit
+                if (t.getDate() != null && !t.getDate().isAfter(now) &&
+                        !t.getDate().isBefore(now.minusDays(7))) {
+                    weeklyProfit += t.getProfit();
+                }
+
+                // monthly profit
+                if (t.getDate() != null &&
+                        t.getDate().getMonthValue() == now.getMonthValue() &&
+                        t.getDate().getYear() == now.getYear()) {
+                    monthlyProfit += t.getProfit();
+                }
+            }
+        }
+
+        double totalProfit = revenue - cost;
+
+        if (revenueLabel != null) revenueLabel.setText(String.format("%.2f", revenue));
+        if (costLabel != null) costLabel.setText(String.format("%.2f", cost));
+        if (totalProfitLabel != null) totalProfitLabel.setText(String.format("%.2f", totalProfit));
+        if (weeklyProfitLabel != null) weeklyProfitLabel.setText(String.format("%.2f", weeklyProfit));
+        if (monthlyProfitLabel != null) monthlyProfitLabel.setText(String.format("%.2f", monthlyProfit));
+    }
+
+
+
+    private void updateWalletLabel() {
+        if (usdWalletLabel != null)
+            usdWalletLabel.setText(String.format("$%.2f", usdBalance));
+        updatePhpEquivalent();
+    }
+
+
+    private void updatePhpEquivalent() {
+        double rate = 56.5; // 1 USD = ₱56.50 (you can update manually or connect API)
+        double phpValue = usdBalance * rate;
+        if (phpEquivalentLabel != null)
+            phpEquivalentLabel.setText(String.format("₱%.2f", phpValue));
+    }
+
+   
+
     @FXML
-    private void handleCurrencyConverter() {
+    public void handleRecordTransaction() {
         try {
-            javafx.fxml.FXMLLoader loader = new javafx.fxml.FXMLLoader(getClass().getResource("/fxml/currency-converter.fxml"));
-            javafx.scene.Parent root = loader.load();
-            Stage st = new Stage();
-            st.setTitle("Currency Converter");
-            st.initModality(Modality.APPLICATION_MODAL);
-            st.setScene(new Scene(root));
-            st.setResizable(false);
-            st.showAndWait();
-        } catch (Exception e) {
-            e.printStackTrace();
-            showError("Error", "Failed to open currency converter: " + e.getMessage());
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/record-transaction.fxml"));
+            Parent root = loader.load();
+            Object controller = loader.getController(); // generic reference
+
+            // create modal stage
+            Stage dialog = new Stage();
+            dialog.initModality(Modality.APPLICATION_MODAL);
+            if (usdWalletLabel != null && usdWalletLabel.getScene() != null) {
+                dialog.initOwner(usdWalletLabel.getScene().getWindow());
+            }
+            dialog.setTitle("Record Transaction");
+            Scene scene = new Scene(root);
+            scene.getStylesheets().add(getClass().getResource("/styles/app.css").toExternalForm());
+            dialog.setScene(scene);
+            dialog.setResizable(false);
+
+            // Try to call setOwner(Stage) on the controller if that method exists (reflection)
+            try {
+                Method m = controller.getClass().getMethod("setOwner", Stage.class);
+                if (m != null) m.invoke(controller, dialog);
+            } catch (NoSuchMethodException ignored) {
+                // controller doesn't expose setOwner - that's okay
+            }
+
+            // Try to register a saved callback: controller.setOnSaved(Runnable)
+            try {
+                Method onSaved = controller.getClass().getMethod("setOnSaved", Runnable.class);
+                if (onSaved != null) {
+                    Runnable callback = () -> Platform.runLater(() -> {
+                        loadUserData();
+                        loadTransactions();
+                    });
+                    onSaved.invoke(controller, callback);
+                }
+            } catch (NoSuchMethodException ignored) {
+                // not provided; we'll refresh after dialog closes anyway
+            }
+
+            // Show modal and wait
+            dialog.showAndWait();
+
+            // Always refresh after dialog closes
+            loadUserData();
+            loadTransactions();
+        } catch (Exception ex) {
+            ex.printStackTrace();
+            showAlert("Error", "Failed to open record transaction dialog:\n" + ex.getMessage(), Alert.AlertType.ERROR);
         }
     }
 
     @FXML
-    private void handleDeposit() {
-        TextInputDialog dialog = new TextInputDialog("0.00");
-        dialog.setTitle("Deposit");
-        dialog.setHeaderText("Deposit USD to wallet");
-        dialog.setContentText("Amount:");
-        dialog.showAndWait().ifPresent(amountStr -> {
+    public void handleDeleteSelected() {
+        Transaction sel = transactionTable.getSelectionModel().getSelectedItem();
+        if (sel == null) {
+            showAlert("No selection", "Please select a transaction to delete.", Alert.AlertType.WARNING);
+            return;
+        }
+        boolean ok = confirm("Delete", "Delete selected transaction?");
+        if (!ok) return;
+
+        boolean removed = txDao.deleteById(sel.getId());
+        if (removed) {
+            transactionTable.getItems().remove(sel);
+            updateKpis();
+            showAlert("Deleted", "Transaction deleted.", Alert.AlertType.INFORMATION);
+        } else {
+            showAlert("Failed", "Could not delete transaction.", Alert.AlertType.ERROR);
+        }
+    }
+
+    @FXML
+    public void handleExportCsv() {
+        try {
+            Path out = Path.of(System.getProperty("user.home"), "trackify_transactions.csv");
+            txDao.exportCsv(out);
+            showAlert("Export complete", "CSV exported to: " + out.toString(), Alert.AlertType.INFORMATION);
+        } catch (Exception ex) {
+            ex.printStackTrace();
+            showAlert("Export failed", ex.getMessage(), Alert.AlertType.ERROR);
+        }
+    }
+
+    @FXML
+    public void handleDeposit() {
+        if (!Session.isAuthenticated()) { showAlert("Not logged in", "Please login to deposit.", Alert.AlertType.WARNING); return; }
+        TextInputDialog d = new TextInputDialog("0.00");
+        d.setTitle("Deposit");
+        d.setHeaderText("Deposit to USD Wallet");
+        d.setContentText("Amount:");
+        d.showAndWait().ifPresent(s -> {
             try {
-                double amount = Double.parseDouble(amountStr);
-                if (amount <= 0) { showWarning("Invalid Amount", "Enter a positive amount."); return; }
+                double amount = Double.parseDouble(s);
+                if (amount <= 0) { showAlert("Invalid amount","Enter a positive number", Alert.AlertType.ERROR); return; }
                 usdBalance += amount;
-                updateKPIs();
-                showInfo("Deposit", String.format("Deposited $%.2f", amount));
-            } catch (NumberFormatException e) { showError("Invalid Input", "Please enter a valid number."); }
+                User u = Session.getCurrentUser();
+                u.setBalance(usdBalance);
+                userDao.save(u);
+                updateWalletLabel();
+                showAlert("Deposit successful", String.format("Deposited $%.2f", amount), Alert.AlertType.INFORMATION);
+            } catch (NumberFormatException ex) { showAlert("Invalid input","Please enter a valid number.", Alert.AlertType.ERROR); }
         });
     }
 
     @FXML
-    private void handleWithdraw() {
-        TextInputDialog dialog = new TextInputDialog("0.00");
-        dialog.setTitle("Withdraw");
-        dialog.setHeaderText("Withdraw USD from wallet");
-        dialog.setContentText("Amount:");
-        dialog.showAndWait().ifPresent(amountStr -> {
+    public void handleWithdraw() {
+        if (!Session.isAuthenticated()) { showAlert("Not logged in", "Please login to withdraw.", Alert.AlertType.WARNING); return; }
+        TextInputDialog d = new TextInputDialog("0.00");
+        d.setTitle("Withdraw");
+        d.setHeaderText("Withdraw from USD Wallet");
+        d.setContentText("Amount:");
+        d.showAndWait().ifPresent(s -> {
             try {
-                double amount = Double.parseDouble(amountStr);
-                if (amount <= 0) { showWarning("Invalid Amount", "Enter a positive amount."); return; }
-                if (amount > usdBalance) { showWarning("Insufficient Funds", "Not enough balance."); return; }
+                double amount = Double.parseDouble(s);
+                if (amount <= 0) { showAlert("Invalid amount","Enter a positive number", Alert.AlertType.ERROR); return; }
+                if (amount > usdBalance) { showAlert("Insufficient funds","You don't have enough balance.", Alert.AlertType.ERROR); return; }
                 usdBalance -= amount;
-                updateKPIs();
-                showInfo("Withdraw", String.format("Withdrew $%.2f", amount));
-            } catch (NumberFormatException e) { showError("Invalid Input", "Please enter a valid number."); }
+                User u = Session.getCurrentUser();
+                u.setBalance(usdBalance);
+                userDao.save(u);
+                updateWalletLabel();
+                showAlert("Withdraw successful", String.format("Withdrew $%.2f", amount), Alert.AlertType.INFORMATION);
+            } catch (NumberFormatException ex) { showAlert("Invalid input","Please enter a valid number.", Alert.AlertType.ERROR); }
         });
     }
 
-    // ------------------ Helpers ------------------
+    @FXML
+    public void handleBuyItems() {
+        try {
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/buy-item.fxml"));
+            Parent root = loader.load();
+            Stage dialog = new Stage();
+            dialog.initModality(Modality.APPLICATION_MODAL);
+            if (usdWalletLabel != null && usdWalletLabel.getScene() != null) dialog.initOwner(usdWalletLabel.getScene().getWindow());
+            dialog.setTitle("Buy Items");
+            Scene scene = new Scene(root);
+            scene.getStylesheets().add(getClass().getResource("/styles/app.css").toExternalForm());
+            dialog.setScene(scene);
+            dialog.setResizable(false);
+            dialog.showAndWait();
 
-    private String escapeCsv(String v) {
-        if (v == null) return "";
-        if (v.contains(",") || v.contains("\"") || v.contains("\n")) return "\"" + v.replace("\"", "\"\"") + "\"";
-        return v;
+            // Refresh after dialog closes
+            loadUserData();
+            loadTransactions();
+        } catch (Exception ex) {
+            ex.printStackTrace();
+            showAlert("Error", "Failed to open buy dialog:\n" + ex.getMessage(), Alert.AlertType.ERROR);
+        }
     }
 
-    private void showInfo(String t, String m) { showAlert(Alert.AlertType.INFORMATION, t, m); }
-    private void showWarning(String t, String m) { showAlert(Alert.AlertType.WARNING, t, m); }
-    private void showError(String t, String m) { showAlert(Alert.AlertType.ERROR, t, m); }
-    private void showAlert(Alert.AlertType type, String title, String message) {
-        Alert a = new Alert(type); a.setTitle(title); a.setHeaderText(null); a.setContentText(message); a.showAndWait();
+    /**
+     * Currency converter handler MUST be public @FXML to satisfy FXMLLoader requirements.
+     */
+    @FXML
+    public void handleCurrencyConverter() {
+        try {
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/currency-converter.fxml"));
+            Parent root = loader.load();
+
+            Stage dialog = new Stage();
+            if (usdWalletLabel != null && usdWalletLabel.getScene() != null) dialog.initOwner(usdWalletLabel.getScene().getWindow());
+            dialog.initModality(Modality.APPLICATION_MODAL);
+            dialog.setTitle("Currency Converter");
+            Scene scene = new Scene(root);
+            scene.getStylesheets().add(getClass().getResource("/styles/app.css").toExternalForm());
+            dialog.setScene(scene);
+            dialog.setResizable(false);
+            dialog.showAndWait();
+        } catch (Exception ex) {
+            ex.printStackTrace();
+            showAlert("Error", "Failed to open currency converter:\n" + ex.getMessage(), Alert.AlertType.ERROR);
+        }
+    }
+
+  
+    private void showAlert(String title, String message, Alert.AlertType t) {
+        try {
+            Alert a = new Alert(t);
+            a.setTitle(title);
+            a.setHeaderText(null);
+            a.setContentText(message);
+            if (usdWalletLabel != null && usdWalletLabel.getScene() != null) a.initOwner(usdWalletLabel.getScene().getWindow());
+            a.showAndWait();
+        } catch (Exception ex) {
+            ex.printStackTrace();
+        }
+    }
+
+    private boolean confirm(String title, String message) {
+        Alert a = new Alert(Alert.AlertType.CONFIRMATION);
+        a.setTitle(title);
+        a.setHeaderText(null);
+        a.setContentText(message);
+        if (usdWalletLabel != null && usdWalletLabel.getScene() != null) a.initOwner(usdWalletLabel.getScene().getWindow());
+        Optional<ButtonType> res = a.showAndWait();
+        return res.isPresent() && res.get() == ButtonType.OK;
     }
 }
