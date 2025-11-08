@@ -2,14 +2,11 @@ package App;
 
 import App.models.User;
 
-/**
- * Simple singleton holding currently authenticated user for the desktop app.
- */
 public class Session {
-    private static User current;
+    private static User currentUser;
 
-    public static void setCurrentUser(User user) { current = user; }
-    public static User getCurrentUser() { return current; }
-    public static boolean isAuthenticated() { return current != null; }
-    public static void clear() { current = null; }
+    public static User getCurrentUser() { return currentUser; }
+    public static void setCurrentUser(User u) { currentUser = u; }
+    public static boolean isAuthenticated() { return currentUser != null; }
+    public static void clear() { currentUser = null; }
 }
