@@ -32,7 +32,7 @@
                        styleClass="input-field">
                 <HBox.hgrow>ALWAYS</HBox.hgrow>
             </TextField>
-            <Button text="Convert to PHP ➜" onAction="#handleUsdToPhp"
+            <Button text="Convert to PHP " onAction="#handleUsdToPhp"
                     styleClass="convert-button" prefWidth="150"/>
         </HBox>
     </VBox>
@@ -45,7 +45,7 @@
                        styleClass="input-field">
                 <HBox.hgrow>ALWAYS</HBox.hgrow>
             </TextField>
-            <Button text="Convert to USD ➜" onAction="#handlePhpToUsd"
+            <Button text="Convert to USD " onAction="#handlePhpToUsd"
                     styleClass="convert-button" prefWidth="150"/>
         </HBox>
     </VBox>
